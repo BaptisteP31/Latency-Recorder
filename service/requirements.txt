@@ -1,0 +1,4 @@
+dotenv
+mariadb
+rich
+ping3

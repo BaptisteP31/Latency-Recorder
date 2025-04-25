@@ -1,0 +1,30 @@
+services:
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: latency-recorder
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "13545:3306"
+    volumes:
+      - ./database/data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  service:
+    container_name: latency-recorder
+    build:
+      context: service/
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: latency-recorder
+      DB_USER: user
+      DB_PASSWORD: password
+    volumes:
+      - ./service/main.py:/app/main.py
+    depends_on:
+      - db
+    command: sh -c "sleep 10 && python /app/main.py"
