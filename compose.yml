@@ -6,6 +6,7 @@ services:
       MYSQL_DATABASE: latency-recorder
       MYSQL_USER: user
       MYSQL_PASSWORD: password
+      TZ: Europe/Paris
     ports:
       - "13545:3306"
     volumes:
@@ -23,6 +24,7 @@ services:
       DB_NAME: latency-recorder
       DB_USER: user
       DB_PASSWORD: password
+      TZ: Europe/Paris
     volumes:
       - ./service/main.py:/app/main.py
     depends_on:
