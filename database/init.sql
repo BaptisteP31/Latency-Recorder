@@ -36,8 +36,7 @@ CREATE TABLE IF NOT EXISTS latency_tests (
     FOREIGN KEY (server_id) REFERENCES remote_servers(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- view summary of latency tests
-CREATE VIEW latency_summary AS
+CREATE OR REPLACE VIEW latency_summary AS
 SELECT
     r.id AS server_id,
     r.server_name,
@@ -49,13 +48,15 @@ SELECT
     CASE 
         WHEN COUNT(l.id) > 0 THEN CONCAT(ROUND(100 * SUM(CASE WHEN l.success = 0 THEN 1 ELSE 0 END) / COUNT(l.id), 2), '%')
         ELSE '0%'
-    END AS fail_rate
+    END AS fail_rate,
+    CONCAT(ROUND(AVG(CASE WHEN l.result <> 0 AND l.created_at >= NOW() - INTERVAL 15 MINUTE THEN l.result END), 2), ' ms') AS average_latency_15min,
+    CONCAT(ROUND(AVG(CASE WHEN l.result <> 0 AND l.created_at >= NOW() - INTERVAL 30 MINUTE THEN l.result END), 2), ' ms') AS average_latency_30min,
+    CONCAT(ROUND(AVG(CASE WHEN l.result <> 0 AND l.created_at >= NOW() - INTERVAL 1 DAY THEN l.result END), 2), ' ms') AS average_latency_24h
 FROM
     remote_servers r
 LEFT JOIN
     latency_tests l ON r.id = l.server_id
 GROUP BY
     r.id;
-
 
 SET FOREIGN_KEY_CHECKS = 1;
