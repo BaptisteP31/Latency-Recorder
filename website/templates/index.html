@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latency Recorder Results</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .alert-banner {
+            background-color: #dc3545;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 1.5rem;
+            color: #495057;
+        }
+
+        .metric-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .sub-metrics {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stats-section {
+            margin-top: 30px;
+        }
+
+        .stats-title {
+            font-size: 1.5rem;
+            color: #343a40;
+            margin-bottom: 20px;
+        }
+
+        .stats-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Banner for failed test -->
+    {% if last_test_failed %}
+    <div class="alert-banner">
+        The last ping test failed. Internet might be down.
+    </div>
+    {% endif %}
+    <div class="container">
+
+        <h1 class="text-center my-4">Latency Recorder Results</h1>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="metric-card">
+                    <div class="metric-title">Average Latency</div>
+                    <div class="metric-value">
+                        {% if latency_results %}
+                        {{ latency_results[0][1] }} ms
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                    <div class="sub-metrics">
+                        <p>15 min: {% if latency_results %} {{ latency_results[0][4] }} {% else %} N/A {% endif %}</p>
+                        <p>30 min: {% if latency_results %} {{ latency_results[0][5] }} {% else %} N/A {% endif %}</p>
+                        <p>24 hours: {% if latency_results %} {{ latency_results[0][6] }} {% else %} N/A {% endif %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="metric-card">
+                    <div class="metric-title">Average Speed</div>
+                    <div class="metric-value">
+                        {% if speed_results %}
+                        {{ speed_results[0][1] }}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                    <div class="sub-metrics">
+                        <p>15 min: {% if speed_results %} {{ speed_results[0][4] }} {% else %} N/A {% endif %}</p>
+                        <p>30 min: {% if speed_results %} {{ speed_results[0][5] }} {% else %} N/A {% endif %}</p>
+                        <p>24 hours: {% if speed_results %} {{ speed_results[0][6] }} {% else %} N/A {% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Per Server Stats -->
+        <div class="stats-section">
+            <h2 class="stats-title">Per Server Statistics</h2>
+            <table class="table table-bordered stats-table">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Server Name</th>
+                        <th>Average Latency</th>
+                        <th>Max Latency</th>
+                        <th>Min Latency</th>
+                        <th>Last 15min</th>
+                        <th>Last 30min</th>
+                        <th>Last 24h</th>
+                        <th>Fail Rate</th>
+                        <th>Test Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if latency_results %}
+                    {% for row in latency_results %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }} ms</td>
+                        <td>{{ row[2] }} ms</td>
+                        <td>{{ row[3] }} ms</td>
+                        <td>{{ row[4] }} ms</td>
+                        <td>{{ row[5] }} ms</td>
+                        <td>{{ row[6] }} ms</td>
+                        <td>{{ row[7] }} %</td>
+                        <td>{{ row[8] }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="11" class="text-center">No data available</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Per File Stats -->
+        <div class="stats-section">
+            <h2 class="stats-title">Per File Statistics</h2>
+            <table class="table table-bordered stats-table">
+                <thead class="table-success">
+                    <tr>
+                        <th>File Name</th>
+                        <th>Average Speed</th>
+                        <th>Max Speed</th>
+                        <th>Min Speed</th>
+                        <th>Last 15min</th>
+                        <th>Last 30min</th>
+                        <th>Last 24h</th>
+                        <th>Test Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in speed_results %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}</td>
+                        <td>{{ row[5] }}</td>
+                        <td>{{ row[6] }}</td>
+                        <td>{{ row[7] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

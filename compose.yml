@@ -30,3 +30,22 @@ services:
     depends_on:
       - db
     command: sh -c "sleep 10 && python /app/main.py"
+
+  web:
+    container_name: latency-web
+    build:
+      context: website/
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: latency-recorder
+      DB_USER: user
+      DB_PASSWORD: password
+      TZ: Europe/Paris
+    env_file:
+      - ./service/.env
+    ports:
+      - "80:8080"
+    depends_on:
+      - db
