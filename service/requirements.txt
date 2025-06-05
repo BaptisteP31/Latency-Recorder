@@ -2,3 +2,4 @@ dotenv
 mariadb
 rich
 ping3
+requests

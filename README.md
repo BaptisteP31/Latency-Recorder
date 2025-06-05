@@ -7,6 +7,7 @@ Latency Recorder, as its name suggests, is a tool to record the latency of remot
 - Simple and easy to use ✅
 - Low resource usage 💡
 - Configurable ping interval per host ⏱️
+- Configurable speed test timeout for remote files ⏳
 - Change settings on the fly 🔄
 - Database-first approach 🗄️
 
@@ -25,11 +26,12 @@ Latency Recorder, as its name suggests, is a tool to record the latency of remot
 docker-compose up -d
 ```
 This starts the following containers:
-- `latency_recorder`: The main application for recording server latency.
-- `db`: A MariaDB database that stores the latency data.
+- `latency_recorder`: The main application for recording server latency and performing speed tests.
+- `db`: A MariaDB database that stores the latency and speed test data.
 
 ## Usage ⚙️
 
+### Latency Tests
 1. Connect to the database with your preferred SQL client. By default, the database is exposed on port 3306, and the database name is `latency_recorder`. The default credentials are:
     - Username: `user`
     - Password: `password`
@@ -48,6 +50,20 @@ This starts the following containers:
 3. View the results with the `latency_summary` view in the database:
 ```sql
 SELECT * FROM latency_summary;
+```
+
+### Speed Tests for Remote Files
+1. Add your remote files to the `remote_files` table in the database. The table has the following columns:
+    - `id`: Auto-incremented file ID 🔢
+    - `file_name`: The name of the file (e.g. `Large CSV Dataset`) 📂
+    - `file_url`: The URL of the file to test (e.g. `https://example.com/large-dataset.csv`) 🌐
+    - `test_interval`: Seconds between speed tests (e.g. `300` for every 5 minutes) ⏲️
+    - `test_timeout`: Timeout for the speed test in seconds (e.g. `10`) ⏳
+    - `test_active`: Enable (1) or disable (0) the file 🔘
+
+2. View the results with the `speed_summary` view in the database:
+```sql
+SELECT * FROM speed_summary;
 ```
 
 ## Contributing 🤝

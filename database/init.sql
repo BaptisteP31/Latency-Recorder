@@ -36,6 +36,27 @@ CREATE TABLE IF NOT EXISTS latency_tests (
     FOREIGN KEY (server_id) REFERENCES remote_servers(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS remote_files (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'File ID',
+    file_name VARCHAR(255) NOT NULL COMMENT 'File name',
+    file_url VARCHAR(255) NOT NULL COMMENT 'File URL',
+    test_interval INT NOT NULL COMMENT 'Interval between tests in seconds',
+    test_timeout INT NOT NULL COMMENT 'Timeout for the test in seconds',
+    test_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Activation status of the test'
+);
+
+CREATE TABLE IF NOT EXISTS speed_tests (
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Test ID',
+    file_id INT NOT NULL COMMENT 'File ID',
+    file_size FLOAT NOT NULL COMMENT 'File size in bytes',
+    download_time FLOAT NOT NULL COMMENT 'Download time in seconds',
+    download_speed FLOAT NOT NULL COMMENT 'Download speed in bytes per second',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation timestamp',
+    FOREIGN KEY (file_id) REFERENCES remote_files(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 CREATE OR REPLACE VIEW latency_summary AS
 SELECT
     r.id AS server_id,
@@ -60,3 +81,23 @@ GROUP BY
     r.id;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE OR REPLACE VIEW speed_summary AS
+SELECT
+    rf.id AS file_id,
+    rf.file_name,
+    rf.file_url,
+    CONCAT(ROUND(MAX(CASE WHEN st.file_size <> 0 THEN st.file_size END) / (1024 * 1024), 2), ' MB') AS file_size_mb,
+    CONCAT(ROUND(AVG(CASE WHEN st.download_speed <> 0 THEN st.download_speed END) / (1024 * 1024), 2), ' MB/s') AS average_speed,
+    CONCAT(ROUND(MAX(CASE WHEN st.download_speed <> 0 THEN st.download_speed END) / (1024 * 1024), 2), ' MB/s') AS max_speed,
+    CONCAT(ROUND(MIN(CASE WHEN st.download_speed <> 0 THEN st.download_speed END) / (1024 * 1024), 2), ' MB/s') AS min_speed,
+    COUNT(st.id) AS test_count,
+    CONCAT(ROUND(AVG(CASE WHEN st.download_speed <> 0 AND st.created_at >= NOW() - INTERVAL 15 MINUTE THEN st.download_speed END) / (1024 * 1024), 2), ' MB/s') AS average_speed_15min,
+    CONCAT(ROUND(AVG(CASE WHEN st.download_speed <> 0 AND st.created_at >= NOW() - INTERVAL 30 MINUTE THEN st.download_speed END) / (1024 * 1024), 2), ' MB/s') AS average_speed_30min,
+    CONCAT(ROUND(AVG(CASE WHEN st.download_speed <> 0 AND st.created_at >= NOW() - INTERVAL 1 DAY THEN st.download_speed END) / (1024 * 1024), 2), ' MB/s') AS average_speed_24h
+FROM
+    remote_files rf
+LEFT JOIN
+    speed_tests st ON rf.id = st.file_id
+GROUP BY
+    rf.id;
